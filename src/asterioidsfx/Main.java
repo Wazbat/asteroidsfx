@@ -6,6 +6,9 @@
 package asterioidsfx;
 
 
+import java.awt.Button;
+import javafx.scene.image.Image;
+import java.util.ArrayList;
 import java.util.Random;
 import javafx.scene.shape.*;
 import javafx.animation.AnimationTimer;
@@ -22,18 +25,19 @@ import javafx.stage.Stage;
  */
 
 
-public class AsterioidsFX extends Application {
+public class Main extends Application {
+    int estilo = 0;
     double velPlayerX = 0;
     double velPlayerY =0;
     double anguloPlayer = 0;
     boolean accelerando = false;
-    boolean ROTIZQ = false;
-    boolean ROTDIR = false;
-    boolean DISPARO = false;
+    boolean rotIzq = false;
+    boolean rotDir = false;
+    boolean disparo = false;
     final int VEL_ROTACION = 5;
     final double POTENCIA_NAVE = 0.1;
     final double MAX_VELOCIDAD_NAVE = 8;
-    boolean VEL_MAXIMA = false;
+    boolean velMaxima = false;
     int flash = 0;
     int delay= 0;
     double velPlayer = 2;
@@ -41,28 +45,37 @@ public class AsterioidsFX extends Application {
     double variaY=0;
     int escudos=3;
     Circle[] iconosEscudo;
-    Polygon[] asteroide; 
-    int numeroAsteroides = 2;
-    
+    Polygon[] asteroide;
+    int numeroAsteroides = 3;
+    double[] velXAsteroide;
+    double[] velYAsteroide;
+    double[] velRotacionAsteroide;
     double radiusescudo=0;
-    boolean ESCUDO=false;
-    boolean VENTANACOMPLETA=false;
-    double velAsterioideX = 0;
-    double velAsterioideY = 0;
-    double velBalaX = 0;
-    double velBalaY = 0;
-    double velBala = 10;
+    boolean escudoActivo=false;
+    boolean ventanaCompleta=false;
+
+    
+    ArrayList<Bala> balas = new ArrayList();
+
+
     
     
-    private boolean getCollisionCircle(Circle obj1, Circle obj2){
-        if (Shape.intersect(obj1, obj2).getBoundsInLocal().isEmpty()){
+    private boolean getCollisionAsteroideEscudo(Asteroide asteroide, Circle circle){
+        if (Shape.intersect(asteroide.getPolygon(), circle).getBoundsInLocal().isEmpty()){
             return false;
         }else{
             return true;
         }
     }
-    private boolean getCollisionPoly(Circle obj1, Polygon obj2){
-        if (Shape.intersect(obj1, obj2).getBoundsInLocal().isEmpty()){
+    private boolean getCollisionAsteroidePoly(Asteroide asteroide, Polygon poly){
+        if (Shape.intersect(asteroide.getPolygon(), poly).getBoundsInLocal().isEmpty()){
+            return false;
+        }else{
+            return true;
+        }
+    }
+    private boolean getCollisionAsteroideBala(Asteroide asteroide, Bala bala){
+        if (Shape.intersect(asteroide.getPolygon(), bala.getPolygon()).getBoundsInLocal().isEmpty()){
             return false;
         }else{
             return true;
@@ -73,12 +86,11 @@ public class AsterioidsFX extends Application {
     
     public void start(Stage primaryStage) {
         
-        
+        Random random=new Random();
         
         Pane root = new Pane();        
         Scene scene = new Scene(root, 1280, 720);
         scene.setFill(Color.BLACK);
-        
         primaryStage.setTitle("AsteroidsFX");
         primaryStage.setScene(scene);
         primaryStage.show();
@@ -139,49 +151,62 @@ public class AsterioidsFX extends Application {
         escudo.toBack();
         player.setLayoutX(scene.getWidth()/2);
         player.setLayoutY(scene.getHeight()/2);
+        //Estilo
+        nave.setId("nave");
+        fuego.setId("fuego1");
+        fuego2.setId("fuego2");
+        escudo.setId("escudo");
+        escudoin.setId("escudoDentro");
+        
+//        Image cambiaestilo = new Image("img/ok.png", 100, 100, false, false);
+//        cambiaestilo
+//        cambiaestilo.(new EventHandler() {            
+//            
+//            public void handle(ActionEvent event) {
+//                scene.getStylesheets().clear();
+//                switch(estilo){
+//                case 0:
+//                    estilo=1;
+//                    break;
+//                case 1:
+//                    scene.getStylesheets().add("css/estilo1.css");
+//                    break;
+//                case 2:
+//                    scene.getStylesheets().add("css/estilo2.css");
+//                    estilo=3;
+//                    break;
+//                case 3:
+//                    scene.getStylesheets().add("css/estilo3.css");
+//                    estilo=0;
+//                    break;
+//            } 
+//            }
+//        });
+                                 
+        
+
+        ArrayList<Asteroide> listaasteroides = new ArrayList();
+        
+        for (int i = 0; i < numeroAsteroides; i++) {
+          Asteroide asteroide = new Asteroide(0,random.nextDouble() * 2 - 1 );
+          listaasteroides.add(asteroide);
+          asteroide.setVelX(random.nextDouble() * 2 - 1 );
+          asteroide.setVelY(random.nextDouble() * 2 - 1 );
+          root.getChildren().add(asteroide.getPolygon());
+        };
         
         
-        Polygon bala = new Polygon(); 
-        bala.getPoints().addAll(new Double[]{
-        0.0, 0.0,
-        1.0, 0.0,
-        1.0, 15.0,
-        0.0, 15.0});
-        bala.setFill(Color.WHITE);
-        bala.setLayoutX(50);
-        bala.setLayoutY(50);
-        root.getChildren().addAll(bala);
         
-        //Asteroid Test
-        asteroide = new Polygon[numeroAsteroides];
-        for(int i=1; i<=numeroAsteroides; i+=1) {
-            asteroide[i] = new Polygon();        
-            asteroide[i].getPoints().addAll(new Double[]{
-            0.0, -0.0,
-            -1.0, -7.0,
-            -10.0, -10.0,
-            -8.0, -27.0,
-            -3.0, -31.0,
-            8.0, 
-            0.0, 10.0 });
-            root.getChildren().add(asteroide[i]);
-            }
-        Circle asteroide = new Circle();
-        asteroide.setRadius(50);
-        asteroide.setFill(Color.WHITE);
-        root.getChildren().addAll(asteroide);
-        Random random=new Random();
         
-        velAsterioideX = random.nextDouble() * 2 - 1 ;
-        velAsterioideY =  random.nextDouble() * 2 - 1 ;
-        System.out.println(velAsterioideX);
-        System.out.println(velAsterioideY);
+        
+       
         //Iconos para mostrar escudos
         iconosEscudo = new Circle[escudos];
         for(int i=1; i<=escudos; i+=1) {
             iconosEscudo[i-1] = new Circle(i*40,20,10,Color.WHITE);
             root.getChildren().add(iconosEscudo[i-1]);
         } 
+        
         //
         //AnimationTImer, un bucle que se repite a 60 Hz
         //
@@ -190,9 +215,14 @@ public class AsterioidsFX extends Application {
             public void handle(long now){
 
             player.relocate(player.getLayoutX()+velPlayerX, player.getLayoutY()+velPlayerY);
+
+            for(int i=0; i<listaasteroides.size(); i++) {
+                listaasteroides.get(i).actualizar(root);
+            }
             
-            asteroide.setLayoutX(asteroide.getLayoutX()+velAsterioideX);
-            asteroide.setLayoutY(asteroide.getLayoutY()+velAsterioideY);
+            
+            
+            
             //
             //Decay Velocidad
             //
@@ -214,9 +244,9 @@ public class AsterioidsFX extends Application {
             //
             //Usado para la rotacion de la nave
             //
-            if (ROTIZQ){
+            if (rotIzq){
                 anguloPlayer -=VEL_ROTACION;   
-            } else if(ROTDIR){
+            } else if(rotDir){
                 anguloPlayer +=VEL_ROTACION;    
             }
             if (anguloPlayer>360){
@@ -233,49 +263,53 @@ public class AsterioidsFX extends Application {
             //Velocidad Maxima
             //
             if (Math.hypot(velPlayerX, velPlayerY) > MAX_VELOCIDAD_NAVE){
-               VEL_MAXIMA = true;
+               velMaxima = true;
             } else{
-                VEL_MAXIMA = false;
+                velMaxima = false;
 
             }
             
             
            
+           
             //
             //Disparo de bala
             //
-            if (DISPARO) {
+            
+            if (disparo) {
                 if (delay>10){
                     delay =0;
                 }
-                if (delay<5) {
-                bala.setVisible(true);
-                bala.setLayoutX(bala.getLayoutX()+velBalaX);
-                bala.setLayoutY(bala.getLayoutY()+velBalaY);
-                } else{
-                
+                if (delay<1) {
+                    Bala bala = new Bala(anguloPlayer, player.getLayoutX(), player.getLayoutY(), velPlayerX, velPlayerY);
+                    balas.add(bala);
+                    root.getChildren().add(bala.getPolygon());
                 }
+            
+            delay++;
+                
             } else {
                 delay = 0;
-                bala.setVisible(false);
-                bala.setLayoutX(player.getLayoutX());
-                bala.setLayoutY(player.getLayoutY());
-                bala.setRotate(anguloPlayer);
-                velBalaX = velPlayerX+velBala*variaX;
-                velBalaY = velPlayerY+velBala*variaY;
-                DISPARO = false;
+                disparo = false;
             }
-            
-                
+            for(int i=0; i<balas.size(); i++) {
+                balas.get(i).actualizar(root); 
+                    if (balas.get(i).vida < 0) {
+                        balas.get(i).object.setVisible(false);
+                        root.getChildren().remove(balas.get(i));
+                        balas.remove(i);
+                    }
+            }
+               
             if (accelerando){
                 //aplicacion del porcentaje calculado antes a la nave
-                if (VEL_MAXIMA == false) {
+                if (velMaxima == false) {
                     velPlayerX=velPlayerX+POTENCIA_NAVE*variaX;
                     velPlayerY=velPlayerY+POTENCIA_NAVE*variaY;
-                }
+                }                
                 
                 
-                
+
                 
                 //Usado para la Animacion del Fuego
                 if (flash > 10){
@@ -297,19 +331,35 @@ public class AsterioidsFX extends Application {
             //  
             //Collision
             //
-            if (getCollisionCircle(asteroide, escudo)) {
-                asteroide.setVisible(false);
-                System.out.println("Collison de Escudo");
+            for (int i=0; i<listaasteroides.size(); i++) {
+                if (getCollisionAsteroideEscudo(listaasteroides.get(i), escudo)) {
+                    listaasteroides.get(i).object.setVisible(false);
+                    root.getChildren().remove(listaasteroides.get(i));
+                    listaasteroides.remove(i);
+                    System.out.println("Collison de Escudo");
+                }
+                for (int j = 0; j <balas.size(); j++) {
+                    if (getCollisionAsteroideBala(listaasteroides.get(i), balas.get(j))) {
+                        listaasteroides.get(i).object.setVisible(false);
+                        root.getChildren().remove(listaasteroides.get(i));
+                        listaasteroides.remove(i);
+                        System.out.println("Collison de Bala");
+                    }   
+                }
+
+                if (getCollisionAsteroidePoly(listaasteroides.get(i), nave)) {
+                    player.setVisible(false);
+                    root.getChildren().remove(nave);
+                    System.out.println("Collison de Nave");
+                }
             }
-            if (getCollisionPoly(asteroide, bala)) {
-                asteroide.setVisible(false);
-                System.out.println("Collison de Bala");
-            }
+            
+            
             
             
             //
             //Escudo
-            if (ESCUDO) {
+            if (escudoActivo) {
                 if (escudos>0) {
                    escudo.setVisible(true);
                    escudoin.setVisible(true);
@@ -324,7 +374,7 @@ public class AsterioidsFX extends Application {
                    
                 }
                 if (escudo.getRadius()<escudoin.getRadius()) {
-                    ESCUDO=false;
+                    escudoActivo=false;
                     iconosEscudo[escudos-1].setVisible(false);
                     escudo.setVisible(false);
                     escudoin.setVisible(false);
@@ -359,18 +409,21 @@ public class AsterioidsFX extends Application {
                 player.setLayoutY(root.getHeight());
             }
             //Asteroide
-            if (asteroide.getLayoutX() > root.getWidth()){
-                asteroide.setLayoutX(0);
-            }
-            if (asteroide.getLayoutX() < 0){
-                asteroide.setLayoutX(root.getWidth());
-            }
-            if (asteroide.getLayoutY() > root.getHeight()){
-                asteroide.setLayoutY(0);
-            }
-            if (asteroide.getLayoutY() < 0){
-                asteroide.setLayoutY(root.getHeight());
-            }
+//            for(int i=0; i<numeroAsteroides; i+=1) {
+//                    if (asteroide[i].getLayoutX() > root.getWidth()){
+//                    asteroide[i].setLayoutX(0);
+//                }
+//                if (asteroide[i].getLayoutX() < 0){
+//                    asteroide[i].setLayoutX(root.getWidth());
+//               }
+//                if (asteroide[i].getLayoutY() > root.getHeight()){
+//                    asteroide[i].setLayoutY(0);
+//                }
+//                if (asteroide[i].getLayoutY() < 0){
+//                    asteroide[i].setLayoutY(root.getHeight());
+//                }
+//            }
+            
             }
             
         };
@@ -385,23 +438,39 @@ public class AsterioidsFX extends Application {
                     accelerando=true;
                     break;
                 case DOWN:
-                    ESCUDO=true;
+                    escudoActivo=true;
                     break;
                 case LEFT:
-                    ROTIZQ=true;
+                    rotIzq=true;
                     break;
                 case RIGHT:
-                    ROTDIR=true;
+                    rotDir=true;
                     break;
                 case SPACE:
-                    DISPARO=true;
+                    disparo=true;
                     break;
+                case DIGIT1:
+                    scene.getStylesheets().clear();
+                    break;
+                case DIGIT2:
+                    scene.getStylesheets().clear();
+                    scene.getStylesheets().add("css/estilo1.css");
+                    break;
+                case DIGIT3:
+                    scene.getStylesheets().clear();
+                    scene.getStylesheets().add("css/estilo2.css");
+                    break;
+                case DIGIT4:
+                    scene.getStylesheets().clear();
+                    scene.getStylesheets().add("css/estilo2.css");
+                    break;
+
                 case F11:
-                    if (VENTANACOMPLETA==false) {
-                        VENTANACOMPLETA=true;
+                    if (ventanaCompleta==false) {
+                        ventanaCompleta=true;
                         System.out.println("Ventana Completa");
-                    } else if(VENTANACOMPLETA){
-                        VENTANACOMPLETA=false;
+                    } else if(ventanaCompleta){
+                        ventanaCompleta=false;
                         System.out.println("Ventana Normal");
                     }
                     break;
@@ -417,13 +486,13 @@ public class AsterioidsFX extends Application {
                 case DOWN:
                     break;
                 case LEFT:
-                    ROTIZQ=false;
+                    rotIzq=false;
                     break;
                 case RIGHT:
-                    ROTDIR=false;
+                    rotDir=false;
                     break;
                 case SPACE:
-                    DISPARO=false;
+                    disparo=false;
                     break;
             }
         });
